@@ -42,3 +42,15 @@ else
     echo "$DATE: No change ($CURRENT_STATE)" >> $LOG_FILE
 fi
 
+
+
+
+
+# Check MySQL
+if systemctl is-active --quiet mysql; then
+    echo "$DATE: MYSQL VERIFIED" >> $ALERT_FILE
+else
+    echo "$DATE: MYSQL DOWN" >> $ALERT_FILE
+    sudo systemctl start mysql
+    echo "$DATE: MYSQL RESTARTED" >> $ALERT_FILE
+fi
