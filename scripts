@@ -1,0 +1,44 @@
+#!/bin/bash
+
+LOG_FILE="/$HOME/monitor.log"
+STATE_FILE="/tmp/NGINX_STATE"
+EMAIL="realemail@gmail.com"
+
+DATE=$(date)
+
+# Get current status
+if systemctl is-active --quiet nginx; then
+    CURRENT_STATE="UP"
+else
+    CURRENT_STATE="DOWN"
+fi
+
+# Get previous state
+if [ -f "$STATE_FILE" ]; then
+    PREVIOUS_STATE=$(cat $STATE_FILE)
+else
+    PREVIOUS_STATE="UNKNOWN"
+fi
+
+# Decision logic
+if [ "$CURRENT_STATE" != "$PREVIOUS_STATE" ]; then
+
+    if [ "$CURRENT_STATE" = "DOWN" ]; then
+        echo "$DATE: 🚨 NGINX DOWN" > $LOG_FILE
+        echo "NGINX is DOWN at $DATE" | mail -s "🚨 NGINX DOWN ALERT" $EMAIL
+         
+         sudo systemctl start nginx
+         echo "$DATE: NGINX STARTED" >> $LOG_FILE
+ 
+    else
+        echo "$DATE: ✅ NGINX RECOVERED" >> $LOG_FILE
+        echo "NGINX is BACK UP at $DATE" | mail -s "✅ NGINX RECOVERED" $EMAIL
+    fi
+
+    # Update state
+    echo "$CURRENT_STATE" > $STATE_FILE
+
+else
+    echo "$DATE: No change ($CURRENT_STATE)" >> $LOG_FILE
+fi
+
